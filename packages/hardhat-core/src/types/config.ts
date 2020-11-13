@@ -1,6 +1,6 @@
 // This file defines the different config types.
 //
-// For each possible kind of config value, we have two type:
+// For each possible kind of config value, we have two types:
 //
 // One that ends with UserConfig, which represent the config as
 // written in the user's config file.
@@ -197,10 +197,12 @@ export interface SolcConfig {
   settings: any;
 }
 
-export interface SolidityConfig {
+export interface MultiSolcConfig {
   compilers: SolcConfig[];
   overrides: Record<string, SolcConfig>;
 }
+// TODO: Remove deprecated name.
+export type SolidityConfig = MultiSolcConfig;
 
 // Hardhat config
 
@@ -216,7 +218,7 @@ export interface HardhatConfig {
   defaultNetwork: string;
   paths: ProjectPathsConfig;
   networks: NetworksConfig;
-  solidity: SolidityConfig;
+  solidity: MultiSolcConfig;
   mocha: Mocha.MochaOptions;
 }
 

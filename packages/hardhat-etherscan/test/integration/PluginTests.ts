@@ -3,7 +3,9 @@ import { readFileSync, writeFileSync } from "fs";
 import { TASK_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { NomicLabsHardhatPluginError } from "hardhat/plugins";
 import path from "path";
+import util from "util";
 
+import { TASK_VERIFY_GET_MINIMUM_BUILD } from "../../src/pluginContext";
 import { useEnvironment } from "../helpers";
 
 // These are skipped because they can't currently be run in CI
@@ -164,3 +166,17 @@ async function deployContract(
   await contract.deployTransaction.wait(5);
   return contract.address;
 }
+
+describe("Plugin subtask test", function () {
+
+  describe("Using a normal Hardhat project", function () {
+    useEnvironment("hardhat-project-only-contracts");
+
+    it.only("Minimum build subtask should work with simple project", async function () {
+      const build = await this.env.run(TASK_VERIFY_GET_MINIMUM_BUILD, {
+        sourceName: "contracts/TestContract.sol",
+      });
+      console.log(util.inspect(build));
+    });
+  });
+});

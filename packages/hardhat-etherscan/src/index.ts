@@ -1,22 +1,40 @@
-import { TASK_COMPILE } from "hardhat/builtin-tasks/task-names";
-import { extendConfig, task } from "hardhat/config";
+import {
+  TASK_COMPILE,
+  TASK_COMPILE_SOLIDITY_COMPILE_JOB,
+  TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE,
+  TASK_COMPILE_SOLIDITY_GET_DEPENDENCY_GRAPH,
+} from "hardhat/builtin-tasks/task-names";
+import { extendConfig, subtask, task, types } from "hardhat/config";
 import {
   HARDHAT_NETWORK_NAME,
   NomicLabsHardhatPluginError,
 } from "hardhat/plugins";
-import { ActionType } from "hardhat/types";
+import {
+  ActionType,
+  CompilationJob,
+  CompilerInput,
+  CompilerOutput,
+  DependencyGraph,
+  SolcConfig,
+} from "hardhat/types";
 import path from "path";
 import semver from "semver";
 
 import { defaultEtherscanConfig } from "./config";
-import { pluginName } from "./pluginContext";
+import { pluginName, TASK_VERIFY_GET_MINIMUM_BUILD } from "./pluginContext";
 import "./type-extensions";
+
+import util from "util";
 
 interface VerificationArgs {
   address: string;
   constructorArguments: string[];
   // Filename of constructor arguments module.
   constructorArgs?: string;
+}
+
+interface CompileArgs {
+  sourceName: string;
 }
 
 const verify: ActionType<VerificationArgs> = async (
@@ -311,3 +329,44 @@ task("verify", "Verifies contract on etherscan")
     []
   )
   .setAction(verify);
+
+const compileSingleContract: ActionType<CompileArgs> = async function (
+  { sourceName },
+  { config, run }
+) {
+  const dependencyGraph: DependencyGraph = await run(
+    TASK_COMPILE_SOLIDITY_GET_DEPENDENCY_GRAPH,
+    { sourceNames: [sourceName] }
+  );
+
+  console.log(`Source name: ${sourceName}`);
+
+  const resolvedFiles = dependencyGraph.getResolvedFiles();
+  console.log(`Resolved files: ${util.inspect(resolvedFiles)}`);
+
+  const compilationJob: CompilationJob = await run(
+    TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE,
+    {
+      dependencyGraph,
+      file: resolvedFiles[0],
+    }
+  );
+
+  const build: {
+    compilationJob: CompilationJob;
+    input: CompilerInput;
+    output: CompilerOutput;
+    solcBuild: any;
+  } = await run(TASK_COMPILE_SOLIDITY_COMPILE_JOB, {
+    compilationJob,
+    compilationJobs: [compilationJob],
+    compilationJobIndex: 0,
+    quiet: true,
+  });
+
+  return build;
+};
+
+subtask(TASK_VERIFY_GET_MINIMUM_BUILD)
+  .addParam("sourceName", undefined, undefined, types.string)
+  .setAction(compileSingleContract);
