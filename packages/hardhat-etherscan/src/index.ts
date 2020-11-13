@@ -252,10 +252,26 @@ This can occur if the library is only called in the contract constructor.`
     constructorArguments
   );
 
+  const minimumBuild = await run(TASK_VERIFY_GET_MINIMUM_BUILD, {
+    sourceName: contractInformation.sourceName,
+  });
+  const minimumBuildContractBytecode =
+    minimumBuild.output.contracts[contractInformation.sourceName][
+      contractInformation.contractName
+    ].evm.deployedBytecode.object;
+  const matchedBytecode =
+    contractInformation.compilerOutput.contracts[
+      contractInformation.sourceName
+    ][contractInformation.contractName].evm.deployedBytecode.object;
+
+  let compilerInputToVerify = contractInformation.compilerInput;
+  if (minimumBuildContractBytecode === matchedBytecode) {
+    compilerInputToVerify = minimumBuild.input;
+  }
+
   // Ensure the linking information is present in the compiler input;
-  contractInformation.compilerInput.settings.libraries =
-    contractInformation.libraryLinks;
-  const compilerInputJSON = JSON.stringify(contractInformation.compilerInput);
+  compilerInputToVerify.settings.libraries = contractInformation.libraryLinks;
+  const compilerInputJSON = JSON.stringify(compilerInputToVerify);
 
   const solcFullVersion = await getLongVersion(contractInformation.solcVersion);
 

@@ -130,6 +130,7 @@ export async function lookupMatchingBytecode(
       // The bytecode matches
       contractMatches.push({
         compilerInput: buildInfo.input,
+        compilerOutput: buildInfo.output,
         solcVersion: buildInfo.solcVersion,
         immutableValues,
         libraryLinks,
