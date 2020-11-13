@@ -360,6 +360,7 @@ const getMinimumBuild: ActionType<MinimumBuildArgs> = async function (
     compilationJob,
     compilationJobs: [compilationJob],
     compilationJobIndex: 0,
+    emitsArtifacts: false,
     quiet: true,
   });
 
