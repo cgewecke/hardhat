@@ -24,8 +24,6 @@ import { defaultEtherscanConfig } from "./config";
 import { pluginName, TASK_VERIFY_GET_MINIMUM_BUILD } from "./pluginContext";
 import "./type-extensions";
 
-import util from "util";
-
 interface VerificationArgs {
   address: string;
   constructorArguments: string[];
@@ -33,7 +31,7 @@ interface VerificationArgs {
   constructorArgs?: string;
 }
 
-interface CompileArgs {
+interface MinimumBuildArgs {
   sourceName: string;
 }
 
@@ -330,7 +328,7 @@ task("verify", "Verifies contract on etherscan")
   )
   .setAction(verify);
 
-const compileSingleContract: ActionType<CompileArgs> = async function (
+const getMinimumBuild: ActionType<MinimumBuildArgs> = async function (
   { sourceName },
   { config, run }
 ) {
@@ -339,10 +337,11 @@ const compileSingleContract: ActionType<CompileArgs> = async function (
     { sourceNames: [sourceName] }
   );
 
-  console.log(`Source name: ${sourceName}`);
-
-  const resolvedFiles = dependencyGraph.getResolvedFiles();
-  console.log(`Resolved files: ${util.inspect(resolvedFiles)}`);
+  const resolvedFiles = dependencyGraph
+    .getResolvedFiles()
+    .filter(({ sourceName: thisSourceName }) => {
+      return thisSourceName === sourceName;
+    });
 
   const compilationJob: CompilationJob = await run(
     TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE,
@@ -369,4 +368,4 @@ const compileSingleContract: ActionType<CompileArgs> = async function (
 
 subtask(TASK_VERIFY_GET_MINIMUM_BUILD)
   .addParam("sourceName", undefined, undefined, types.string)
-  .setAction(compileSingleContract);
+  .setAction(getMinimumBuild);

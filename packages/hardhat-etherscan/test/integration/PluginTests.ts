@@ -3,7 +3,6 @@ import { readFileSync, writeFileSync } from "fs";
 import { TASK_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { NomicLabsHardhatPluginError } from "hardhat/plugins";
 import path from "path";
-import util from "util";
 
 import { TASK_VERIFY_GET_MINIMUM_BUILD } from "../../src/pluginContext";
 import { useEnvironment } from "../helpers";
@@ -176,7 +175,6 @@ describe("Plugin subtask test", function () {
       const build = await this.env.run(TASK_VERIFY_GET_MINIMUM_BUILD, {
         sourceName: "contracts/TestContract.sol",
       });
-      console.log(util.inspect(build));
     });
   });
 });
