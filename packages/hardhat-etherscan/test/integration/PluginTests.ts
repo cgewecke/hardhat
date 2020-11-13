@@ -172,9 +172,15 @@ describe("Plugin subtask test", function () {
     useEnvironment("hardhat-project-only-contracts");
 
     it.only("Minimum build subtask should work with simple project", async function () {
+      const sourceName = "contracts/TestContract.sol";
       const build = await this.env.run(TASK_VERIFY_GET_MINIMUM_BUILD, {
-        sourceName: "contracts/TestContract.sol",
+        sourceName,
       });
+
+      assert.hasAnyKeys(build.input.sources, [sourceName]);
+      assert.hasAnyKeys(build.output.sources, [sourceName]);
+
+      assert.doesNotHaveAnyKeys(build.output.sources, ["contracts/ReentrancyGuard.sol"]);
     });
   });
 });
